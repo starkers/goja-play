@@ -9,6 +9,7 @@ import (
 	"github.com/ghodss/yaml"
 	flag "github.com/spf13/pflag"
 	"os"
+	"path/filepath"
 )
 
 var flagFile string
@@ -32,10 +33,16 @@ func main() {
 		os.Exit(1)
 	}
 	fileContentsString := string(rawFile)
+	oldWd, err := changeDirToFile(flagFile)
 
 	vm := goja.New()
 	reg := require.NewRegistry(
-	// require.WithGlobalFolders("."),
+		require.WithGlobalFolders(
+			".",
+			"..",
+			// "./example2-test-func",
+			"./libs",
+		),
 	)
 	reg.Enable(vm)
 	console.Enable(vm) // support "console()" inside js
@@ -73,6 +80,10 @@ func main() {
 		"file", flagFile,
 		"res", res)
 	prettyPrintJSONString(res.ToString().String())
+	err = os.Chdir(oldWd)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func prettyPrintJSONString(input string) {
@@ -91,4 +102,24 @@ func prettyPrintJSONString(input string) {
 	s, _ := f.Marshal(prettyObj)
 	fmt.Println(string(s))
 	fmt.Println("---")
+}
+
+// changeDirToFile will change the CWD into the same path as a file specified
+// ideally provide the full path to the file, however a relative path should suffice
+// returns the old "CWD" and an error
+func changeDirToFile(file string) (oldWD string, err error) {
+	oldWD, err = os.Getwd()
+	if err != nil {
+		return
+	}
+	p, err := filepath.Abs(file)
+	if err != nil {
+		return
+	}
+	err = os.Chdir(filepath.Dir(p))
+	log.Debugw("changed dir",
+		"old", oldWD,
+		"new", p,
+	)
+	return
 }
