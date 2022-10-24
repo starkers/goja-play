@@ -40,8 +40,7 @@ func main() {
 		require.WithGlobalFolders(
 			".",
 			"..",
-			// "./example2-test-func",
-			"./libs",
+			"libs",
 		),
 	)
 	reg.Enable(vm)

@@ -1,5 +1,5 @@
 
-const m = require("../libs/testmod.js")
+const m = require("testmod.js")
 
 m.test()
 
